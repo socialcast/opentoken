@@ -5,12 +5,14 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "opentoken"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{TODO: ruby implementation of the opentoken specification}
+    gem.description = %Q{TODO: parse opentoken properties within your rails app}
     gem.email = "ryan@socialcast.com"
     gem.homepage = "http://github.com/wireframe/opentoken"
     gem.authors = ["Ryan Sonnek"]
+    gem.add_dependency "activesupport", ">=2.3.4"
     gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
+    gem.add_development_dependency "timecop", ">=0.3.4"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
 rescue LoadError
