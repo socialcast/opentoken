@@ -5,16 +5,17 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "opentoken"
-    gem.summary = %Q{TODO: ruby implementation of the opentoken specification}
-    gem.description = %Q{TODO: parse opentoken properties within your rails app}
+    gem.summary = %Q{ruby implementation of the opentoken specification}
+    gem.description = %Q{parse opentoken properties passed for Single Signon requests}
     gem.email = "ryan@socialcast.com"
     gem.homepage = "http://github.com/wireframe/opentoken"
     gem.authors = ["Ryan Sonnek"]
     gem.add_dependency "activesupport", ">=2.3.4"
-    gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
+    gem.add_development_dependency "shoulda", ">= 0"
     gem.add_development_dependency "timecop", ">=0.3.4"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
+  Jeweler::RubygemsDotOrgTasks.new
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
 end
