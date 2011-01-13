@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "lib/opentoken.rb",
+    "lib/opentoken/key_value_serializer.rb",
+    "lib/opentoken/password_key_generator.rb",
     "opentoken.gemspec",
     "test/helper.rb",
     "test/test_opentoken.rb"
