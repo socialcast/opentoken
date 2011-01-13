@@ -10,7 +10,6 @@ begin
     gem.email = "ryan@socialcast.com"
     gem.homepage = "http://github.com/wireframe/opentoken"
     gem.authors = ["Ryan Sonnek"]
-    gem.add_dependency "activesupport", ">=2.3.4"
     gem.add_development_dependency "shoulda", ">= 0"
     gem.add_development_dependency "timecop", ">=0.3.4"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
