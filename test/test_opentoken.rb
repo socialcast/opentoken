@@ -44,5 +44,17 @@ class TestOpentoken < Test::Unit::TestCase
         end
       end
     end
+
+    context "parsing token with attribute value containing apostrophe" do
+      setup do
+        Timecop.travel(Time.iso8601('2011-01-13T11:08:01Z')) do
+          @opentoken = "T1RLAQLIjiqgexqi1PQcEKCetvGoSYR2jhDFSIfE5ctlSBxEnq3S1ydjAADQUNRIKJx6_14aE3MQZnDABupGJrKNfoJHFS5VOnKexjMtboeOgst31Hf-D9CZBrpB7Jv0KBwnQ7DN3HizecPT76oX3UGtq_Vi5j5bKYCeObYm9W6h7NY-VzcZY5TTqIuulc2Jit381usAWZ2Sv1c_CWwhrH4hw-x7vUQMSjErvXK1qvsrFCpfNr7XlArx0HjI6kT5XEaHgQNdC0zrLw9cZ4rewoEisR3H5oM7B6gMaP82wTSFVBXvpn5r0KT-Iuc3JuG2en1zVh3GNf110oQCKQ**"
+          @token = OpenToken.new @opentoken, :password => @password
+        end
+      end
+      should 'preserve apostrophe in attribute payload' do
+        assert_equal "D'angelo", @token[:last_name]
+      end
+    end
   end
 end

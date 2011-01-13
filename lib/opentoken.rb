@@ -90,6 +90,7 @@ class OpenToken
     rescue Zlib::BufError
       Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate(compressed_payload[2, compressed_payload.size])
     end
+    puts 'EXPANDED PAYLOAD', unparsed_payload if DEBUG
 
     #validate payload hmac
     mac = "0x01".hex.chr
@@ -102,7 +103,10 @@ class OpenToken
       raise "HMAC for payload was #{hash} and expected to be #{payload_hmac}" unless payload_hmac == hash
     end
 
-    @payload = KeyValueSerializer.deserialize CGI::unescapeHTML(unparsed_payload)
+    unescaped_payload = CGI::unescapeHTML(unparsed_payload)
+    puts 'UNESCAPED PAYLOAD', unescaped_payload if DEBUG
+    @payload = KeyValueSerializer.deserialize unescaped_payload
+    puts @payload.inspect if DEBUG
     raise TokenExpiredError.new("#{Time.now.utc} is not within token duration: #{self.start_at} - #{self.end_at}") if self.expired?
   end
 
@@ -218,7 +222,7 @@ class KeyValueSerializer
   IN_QUOTED_VALUE = 6
 
   def self.unescape_value(value)
-    value.gsub("\\\"", "\"").gsub("\'", "'")
+    value.gsub("\\\"", "\"").gsub("\\\'", "'")
   end
 
   def self.deserialize(string)
@@ -230,7 +234,6 @@ class KeyValueSerializer
     nextval = ""
     
     string.split(//).each do |c|
-      
       nextval = c
 
       case c
@@ -284,7 +287,7 @@ class KeyValueSerializer
         end
       when "\""
         if state == IN_QUOTED_VALUE
-          if (c == open_quote_char) && (token[token.size-1] != "\\")
+          if (c == open_quote_char) && (token[token.size-1] != "\\"[0])
             result[currkey] = self.unescape_value(token)
             token = ""
             state = LINE_END
@@ -297,7 +300,7 @@ class KeyValueSerializer
         end
       when "'"
         if state == IN_QUOTED_VALUE
-          if (c == open_quote_char) && (token[token.size-1] != "\\")
+          if (c == open_quote_char) && (token[token.size-1] != "\\"[0])
             result[currkey] = self.unescape_value(token)
             token = ""
             state = LINE_END
