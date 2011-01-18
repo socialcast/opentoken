@@ -50,16 +50,12 @@ module OpenToken
       @@password = password
     end
     def parse(opentoken)
-      #ruby 1.9 has Base64.urlsafe_decode64 which can be used instead of gsubbing '_' and '-'
-      string = (opentoken || '').gsub('*', '=').gsub('_', '/').gsub('-', '+')
-      data = Base64.decode64(string)
+      data = decode(opentoken)
       inspect_binary_string 'DATA', data
 
-      #header: should be OTK
       header = data[0..2]
       verify header == 'OTK', "Invalid token header: #{header}"
 
-      #version: should == 1
       version = data[3]
       verify version == 1, "Unsupported token version: #{version}"
 
@@ -120,6 +116,11 @@ module OpenToken
     end
 
     private
+    #ruby 1.9 has Base64.urlsafe_decode64 which can be used instead of gsubbing '_' and '-'
+    def decode(token)
+      string = (token || '').gsub('*', '=').gsub('_', '/').gsub('-', '+')
+      data = Base64.decode64(string)
+    end
     def verify(assertion, message = 'Invalid Token')
       raise OpenToken::TokenInvalidError.new(message) unless assertion
     end
