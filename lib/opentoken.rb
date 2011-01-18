@@ -9,7 +9,6 @@ require File.join(File.dirname(__FILE__), 'opentoken', 'key_value_serializer')
 require File.join(File.dirname(__FILE__), 'opentoken', 'password_key_generator')
 
 module OpenToken
-  class TokenExpiredError < StandardError;  end
   class TokenInvalidError < StandardError;  end
 
   CIPHER_NULL = 0
@@ -122,7 +121,7 @@ module OpenToken
       puts 'UNESCAPED PAYLOAD', unescaped_payload if debug?
       token = OpenToken::KeyValueSerializer.deserialize unescaped_payload
       puts token.inspect if debug?
-      raise OpenToken::TokenExpiredError.new("#{Time.now.utc} is not within token duration: #{token.start_at} - #{token.end_at}") if token.expired?
+      token.validate!
       token
     end
 
