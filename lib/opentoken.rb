@@ -53,11 +53,8 @@ module OpenToken
       data = decode(opentoken)
       inspect_binary_string 'DATA', data
 
-      header = data[0..2]
-      verify header == 'OTK', "Invalid token header: #{header}"
-
-      version = data[3]
-      verify version == 1, "Unsupported token version: #{version}"
+      verify_header data
+      verify_version data
 
       #cipher suite identifier
       cipher_suite = data[4]
@@ -116,6 +113,14 @@ module OpenToken
     end
 
     private
+    def verify_header(data)
+      header = data[0..2]
+      verify header == 'OTK', "Invalid token header: #{header}"
+    end
+    def verify_version(data)
+      version = data[3]
+      verify version == 1, "Unsupported token version: #{version}"
+    end
     #ruby 1.9 has Base64.urlsafe_decode64 which can be used instead of gsubbing '_' and '-'
     def decode(token)
       string = (token || '').gsub('*', '=').gsub('_', '/').gsub('-', '+')
