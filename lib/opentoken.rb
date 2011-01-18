@@ -94,12 +94,13 @@ module OpenToken
       puts 'EXPANDED PAYLOAD', unparsed_payload if debug?
 
       #validate payload hmac
-      mac = "0x01".hex.chr
-      mac += cipher_suite.chr
-      mac += iv
-      mac += key if key_length > 0 #key embedding is not currently supported
-      mac += unparsed_payload
-      hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac)
+      mac = []
+      mac << "0x01".hex.chr
+      mac << cipher_suite.chr
+      mac << iv
+      mac << key if key_length > 0 #key embedding is not currently supported
+      mac << unparsed_payload
+      hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac.join)
       if (hash <=> payload_hmac) != 0
         verify payload_hmac == hash, "HMAC for payload was #{hash} and expected to be #{payload_hmac}"
       end
