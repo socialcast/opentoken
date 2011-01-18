@@ -97,13 +97,7 @@ module OpenToken
       compressed_payload = decrypt_payload(encrypted_payload, cipher, key, iv)
       inspect_binary_string 'COMPRESSED PAYLOAD', compressed_payload
 
-      #decompress the payload
-      #see http://stackoverflow.com/questions/1361892/how-to-decompress-gzip-data-in-ruby
-      unparsed_payload = begin
-        Zlib::Inflate.inflate(compressed_payload)
-      rescue Zlib::BufError
-        Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate(compressed_payload[2, compressed_payload.size])
-      end
+      unparsed_payload = unzip_payload compressed_payload
       puts 'EXPANDED PAYLOAD', unparsed_payload if debug?
 
       #validate payload hmac
@@ -129,18 +123,26 @@ module OpenToken
     def verify(assertion, message = 'Invalid Token')
       raise OpenToken::TokenInvalidError.new(message) unless assertion
     end
+    #see http://snippets.dzone.com/posts/show/4975
+    #see http://jdwyah.blogspot.com/2009/12/decrypting-ruby-aes-encryption.html
+    #see http://snippets.dzone.com/posts/show/576
     def decrypt_payload(encrypted_payload, cipher, key, iv)
       return encrypted_payload unless cipher[:algorithm]
-      #see http://snippets.dzone.com/posts/show/4975
-      #see http://jdwyah.blogspot.com/2009/12/decrypting-ruby-aes-encryption.html
-      #see http://snippets.dzone.com/posts/show/576
       crypt = OpenSSL::Cipher::Cipher.new(cipher[:algorithm])
       crypt.decrypt
       crypt.key = key 
       crypt.iv = iv
       crypt.update(encrypted_payload) + crypt.final
     end
-
+    #decompress the payload
+    #see http://stackoverflow.com/questions/1361892/how-to-decompress-gzip-data-in-ruby
+    def unzip_payload(compressed_payload)
+      unparsed_payload = begin
+        Zlib::Inflate.inflate(compressed_payload)
+      rescue Zlib::BufError
+        Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate(compressed_payload[2, compressed_payload.size])
+      end
+    end
     def inspect_binary_string(header, string)
       return unless debug?
       puts "#{header}:"
