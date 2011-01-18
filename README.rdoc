@@ -4,6 +4,14 @@ Parse encrypted opentoken properties
 
 see http://www.pingidentity.com/opentoken
 
+== Usage
+
+  #configure decryption with shared key
+  OpenToken.password = 'shared_secret_to_decrypt'
+
+  #decrypt opentoken into hash of attributes
+  attributes = OpenToken.parse opentoken
+  
 == Note on Patches/Pull Requests
  
 * Fork the project.

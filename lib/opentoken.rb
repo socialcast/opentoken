@@ -10,6 +10,7 @@ require File.join(File.dirname(__FILE__), 'opentoken', 'password_key_generator')
 
 module OpenToken
   class TokenExpiredError < StandardError;  end
+  class TokenInvalidError < StandardError;  end
 
   CIPHER_NULL = 0
   CIPHER_AES_256_CBC = 1
@@ -57,16 +58,16 @@ module OpenToken
 
       #header: should be OTK
       header = data[0..2]
-      raise "Invalid token header: #{header}" unless header == 'OTK'
+      verify header == 'OTK', "Invalid token header: #{header}"
 
       #version: should == 1
       version = data[3]
-      raise "Unsupported token version: #{version}" unless version == 1
+      verify version == 1, "Unsupported token version: #{version}"
 
       #cipher suite identifier
       cipher_suite = data[4]
       cipher = CIPHERS[cipher_suite]
-      raise "Unknown cipher suite: #{cipher_suite}" if cipher.nil?
+      verify !cipher.nil?, "Unknown cipher suite: #{cipher_suite}"
 
       #SHA-1 HMAC
       payload_hmac = data[5..24]
@@ -77,18 +78,18 @@ module OpenToken
       iv_end = [26, 26 + iv_length - 1].max
       iv = data[26..iv_end]
       inspect_binary_string "IV [26..#{iv_end}]", iv
-      raise "Cipher expects iv length of #{cipher[:iv_length]} and was: #{iv_length}" unless iv_length == cipher[:iv_length]
+      verify iv_length == cipher[:iv_length], "Cipher expects iv length of #{cipher[:iv_length]} and was: #{iv_length}"
 
       #key (not currently used)
       key_length = data[iv_end + 1]
       key_end = iv_end + 1
-      raise "Token key embedding is not currently supported" unless key_length == 0
+      verify key_length == 0, "Token key embedding is not currently supported"
 
       #payload
       payload_length = data[(key_end + 1)..(key_end + 2)].unpack('n').first
       payload_offset = key_end + 3
       encrypted_payload = data[payload_offset..(data.length - 1)]
-      raise "Payload length is #{encrypted_payload.length} and was expected to be #{payload_length}" unless encrypted_payload.length == payload_length
+      verify encrypted_payload.length == payload_length, "Payload length is #{encrypted_payload.length} and was expected to be #{payload_length}"
       inspect_binary_string "ENCRYPTED PAYLOAD [#{payload_offset}..#{data.length - 1}]", encrypted_payload
 
       key = OpenToken::PasswordKeyGenerator.generate(@@password, cipher)
@@ -114,7 +115,7 @@ module OpenToken
       mac += unparsed_payload
       hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac)
       if (hash <=> payload_hmac) != 0
-        raise "HMAC for payload was #{hash} and expected to be #{payload_hmac}" unless payload_hmac == hash
+        verify payload_hmac == hash, "HMAC for payload was #{hash} and expected to be #{payload_hmac}"
       end
 
       unescaped_payload = CGI::unescapeHTML(unparsed_payload)
@@ -126,6 +127,9 @@ module OpenToken
     end
 
     private
+    def verify(assertion, message = 'Invalid Token')
+      raise OpenToken::TokenInvalidError.new(message) unless assertion
+    end
     def decrypt_payload(encrypted_payload, cipher, key, iv)
       return encrypted_payload unless cipher[:algorithm]
       #see http://snippets.dzone.com/posts/show/4975
