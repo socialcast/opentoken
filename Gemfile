@@ -7,4 +7,6 @@ gem "i18n", ">= 0"
 group :development do
   gem "shoulda", '>=0'
   gem "timecop", '>=0.3.4'
+  gem 'rcov'
+  gem 'jeweler'
 end

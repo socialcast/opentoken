@@ -1,21 +1,25 @@
 require 'rubygems'
+require 'bundler'
+begin
+  Bundler.setup(:default, :development)
+rescue Bundler::BundlerError => e
+  $stderr.puts e.message
+  $stderr.puts "Run `bundle install` to install missing gems"
+  exit e.status_code
+end
 require 'rake'
 
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |gem|
-    gem.name = "opentoken"
-    gem.summary = %Q{ruby implementation of the opentoken specification}
-    gem.description = %Q{parse opentoken properties passed for Single Signon requests}
-    gem.email = "ryan@socialcast.com"
-    gem.homepage = "http://github.com/wireframe/opentoken"
-    gem.authors = ["Ryan Sonnek"]
-    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
-  end
-  Jeweler::RubygemsDotOrgTasks.new
-rescue LoadError
-  puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
+require 'jeweler'
+Jeweler::Tasks.new do |gem|
+  gem.name = "opentoken"
+  gem.summary = %Q{ruby implementation of the opentoken specification}
+  gem.description = %Q{parse opentoken properties passed for Single Signon requests}
+  gem.email = "ryan@codecrate.com"
+  gem.homepage = "http://github.com/wireframe/opentoken"
+  gem.authors = ["Ryan Sonnek"]
+  # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
 end
+Jeweler::RubygemsDotOrgTasks.new
 
 require 'rake/testtask'
 Rake::TestTask.new(:test) do |test|
@@ -24,17 +28,11 @@ Rake::TestTask.new(:test) do |test|
   test.verbose = true
 end
 
-begin
-  require 'rcov/rcovtask'
-  Rcov::RcovTask.new do |test|
-    test.libs << 'test'
-    test.pattern = 'test/**/test_*.rb'
-    test.verbose = true
-  end
-rescue LoadError
-  task :rcov do
-    abort "RCov is not available. In order to run rcov, you must: sudo gem install spicycode-rcov"
-  end
+require 'rcov/rcovtask'
+Rcov::RcovTask.new do |test|
+  test.libs << 'test'
+  test.pattern = 'test/**/test_*.rb'
+  test.verbose = true
 end
 
 task :default => :test
