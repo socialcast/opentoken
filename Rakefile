@@ -10,8 +10,6 @@ begin
     gem.email = "ryan@socialcast.com"
     gem.homepage = "http://github.com/wireframe/opentoken"
     gem.authors = ["Ryan Sonnek"]
-    gem.add_development_dependency "shoulda", ">= 0"
-    gem.add_development_dependency "timecop", ">=0.3.4"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::RubygemsDotOrgTasks.new
@@ -38,8 +36,6 @@ rescue LoadError
     abort "RCov is not available. In order to run rcov, you must: sudo gem install spicycode-rcov"
   end
 end
-
-task :test => :check_dependencies
 
 task :default => :test
 
