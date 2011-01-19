@@ -49,7 +49,8 @@ module OpenToken
     def password=(password)
       @@password = password
     end
-    def parse(opentoken)
+    def parse(opentoken = nil)
+      verify opentoken.present?, 'Unable to parse empty token'
       data = decode(opentoken)
       inspect_binary_string 'DATA', data
 
@@ -124,7 +125,7 @@ module OpenToken
     end
     #ruby 1.9 has Base64.urlsafe_decode64 which can be used instead of gsubbing '_' and '-'
     def decode(token)
-      string = (token || '').gsub('*', '=').gsub('_', '/').gsub('-', '+')
+      string = token.gsub('*', '=').gsub('_', '/').gsub('-', '+')
       data = Base64.decode64(string)
     end
     def verify(assertion, message = 'Invalid Token')

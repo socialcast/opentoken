@@ -60,5 +60,11 @@ class TestOpentoken < Test::Unit::TestCase
         assert_equal "D'angelo", @token[:last_name]
       end
     end
+
+    should 'raise invalid token error parsing nil token' do
+      assert_raises OpenToken::TokenInvalidError do
+        OpenToken.parse nil
+      end
+    end
   end
 end
