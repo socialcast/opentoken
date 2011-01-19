@@ -32,6 +32,7 @@ Gem::Specification.new do |s|
     "test/test_opentoken.rb"
   ]
   s.homepage = %q{http://github.com/wireframe/opentoken}
+  s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.4.2}
   s.summary = %q{ruby implementation of the opentoken specification}
@@ -47,24 +48,24 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<activesupport>, ["~> 3.0.3"])
       s.add_runtime_dependency(%q<i18n>, [">= 0"])
       s.add_development_dependency(%q<shoulda>, [">= 0"])
-      s.add_development_dependency(%q<timecop>, [">= 0.3.4"])
-      s.add_development_dependency(%q<shoulda>, [">= 0"])
-      s.add_development_dependency(%q<timecop>, [">= 0.3.4"])
+      s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
+      s.add_development_dependency(%q<jeweler>, ["~> 1.5.2"])
+      s.add_development_dependency(%q<rcov>, [">= 0"])
     else
       s.add_dependency(%q<activesupport>, ["~> 3.0.3"])
       s.add_dependency(%q<i18n>, [">= 0"])
       s.add_dependency(%q<shoulda>, [">= 0"])
-      s.add_dependency(%q<timecop>, [">= 0.3.4"])
-      s.add_dependency(%q<shoulda>, [">= 0"])
-      s.add_dependency(%q<timecop>, [">= 0.3.4"])
+      s.add_dependency(%q<bundler>, ["~> 1.0.0"])
+      s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
+      s.add_dependency(%q<rcov>, [">= 0"])
     end
   else
     s.add_dependency(%q<activesupport>, ["~> 3.0.3"])
     s.add_dependency(%q<i18n>, [">= 0"])
     s.add_dependency(%q<shoulda>, [">= 0"])
-    s.add_dependency(%q<timecop>, [">= 0.3.4"])
-    s.add_dependency(%q<shoulda>, [">= 0"])
-    s.add_dependency(%q<timecop>, [">= 0.3.4"])
+    s.add_dependency(%q<bundler>, ["~> 1.0.0"])
+    s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
+    s.add_dependency(%q<rcov>, [">= 0"])
   end
 end
 
