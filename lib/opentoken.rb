@@ -58,7 +58,7 @@ module OpenToken
       verify_version data
 
       #cipher suite identifier
-      cipher_suite = data[4]
+      cipher_suite = char_value_of data[4]
       cipher = CIPHERS[cipher_suite]
       verify !cipher.nil?, "Unknown cipher suite: #{cipher_suite}"
 
@@ -67,14 +67,14 @@ module OpenToken
       inspect_binary_string "PAYLOAD HMAC [5..24]", payload_hmac
 
       #Initialization Vector (iv)
-      iv_length = data[25]
-      iv_end = [26, 26 + iv_length - 1].max
+      iv_length = char_value_of data[25]
+      iv_end = char_value_of [26, 26 + iv_length - 1].max
       iv = data[26..iv_end]
       inspect_binary_string "IV [26..#{iv_end}]", iv
       verify iv_length == cipher[:iv_length], "Cipher expects iv length of #{cipher[:iv_length]} and was: #{iv_length}"
 
       #key (not currently used)
-      key_length = data[iv_end + 1]
+      key_length = char_value_of data[iv_end + 1]
       key_end = iv_end + 1
       verify key_length == 0, "Token key embedding is not currently supported"
 
@@ -115,13 +115,20 @@ module OpenToken
     end
 
     private
+    def char_value_of(character)
+      if RUBY_VERSION < "1.9"
+        return character
+      else
+        return character.chr.ord
+      end
+    end
     def verify_header(data)
       header = data[0..2]
       verify header == 'OTK', "Invalid token header: #{header}"
     end
     def verify_version(data)
-      version = data[3]
-      verify version == 1, "Unsupported token version: #{version}"
+      version = char_value_of data[3]
+      verify version == 1, "Unsupported token version: '#{version}'"
     end
     #ruby 1.9 has Base64.urlsafe_decode64 which can be used instead of gsubbing '_' and '-'
     def decode(token)
