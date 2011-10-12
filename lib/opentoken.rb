@@ -67,9 +67,9 @@ module OpenToken
       attributes.delete('not-before')
       attributes.delete('not-on-or-after')
       attributes.delete('renew-until')
-      attributes.store('not-before', Time.now.iso8601.to_s)
-      attributes.store('not-on-or-after', Time.at(Time.now.to_i + @@tokenLifetime).iso8601.to_s)
-      attributes.store('renew-until', Time.at(Time.now.to_i + @@renewUntilLifetime).iso8601.to_s)
+      attributes.store('not-before', Time.now.utc.iso8601.to_s)
+      attributes.store('not-on-or-after', Time.at(Time.now.to_i + @@tokenLifetime).utc.iso8601.to_s)
+      attributes.store('renew-until', Time.at(Time.now.to_i + @@renewUntilLifetime).utc.iso8601.to_s)
       tokenString = ""
       key = OpenToken::PasswordKeyGenerator::generate(@@password, CIPHERS[cipherSuite])
       c = OpenSSL::Cipher::Cipher::new(CIPHERS[cipherSuite][:algorithm])
@@ -194,7 +194,7 @@ module OpenToken
     end
     def encode(token)
       string = Base64.encode64(token);
-      string = string.gsub('=', '*').gsub('/', '_').gsub('+', '-').gsub('\n', '')
+      string = string.gsub('=', '*').gsub('/', '_').gsub('+', '-').gsub(10.chr, '').gsub(11.chr, '')
       string
     end
     def verify(assertion, message = 'Invalid Token')
