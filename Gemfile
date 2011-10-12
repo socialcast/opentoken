@@ -1,6 +1,6 @@
 source "http://rubygems.org"
 
-gem "activesupport", "~> 3.0.3"
+gem "activesupport", ">= 3.0.3", "< 3.2"
 gem "i18n", ">= 0"
 
 group :development do

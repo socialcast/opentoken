@@ -12,6 +12,12 @@ OpenToken.password = 'shared_secret_to_decrypt'
 
 # decrypt opentoken into hash of attributes
 attributes = OpenToken.parse 'opentoken-hashed-string'
+
+# encrypt opentoken from hash of attributes
+attributes = { 'subject' => 'foo', 'bar' => 'bak' }
+cipherSuite = 2
+token = OpenToken.writeToken(attributes, cipherSuite) 
+
 ```
   
 ## Contributing
