@@ -12,6 +12,31 @@ module OpenToken
       value.gsub("\\\"", "\"").gsub("\\\'", "'")
     end
 
+    def self.serialize(hashmap)
+      result = String.new
+      count = 0;
+      hashmap.each_pair do |key,value|
+        if (count != 0)
+          result = result + "\n"
+        end
+        count +=1
+        result += key + "="
+        result += escapeValue(value)
+      end
+      result
+    end
+    
+    def self.escapeValue(value)
+      value.each_byte do |b|
+        c = b.chr
+        if c == "\n" or c == "\t" or c == " " or c == "'" or c == "\""
+          value = "'" + value.gsub("'", "\'").gsub("\"", "\\\"") + "'"
+          break
+        end
+      end
+      value
+    end
+
     def self.deserialize(string)
       result = OpenToken::Token.new
       state = LINE_START

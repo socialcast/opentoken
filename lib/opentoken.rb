@@ -4,6 +4,7 @@ require 'digest/sha1'
 require 'zlib'
 require 'stringio'
 require 'cgi'
+require 'time'
 require File.join(File.dirname(__FILE__), 'opentoken', 'token')
 require File.join(File.dirname(__FILE__), 'opentoken', 'key_value_serializer')
 require File.join(File.dirname(__FILE__), 'opentoken', 'password_key_generator')
@@ -49,6 +50,62 @@ module OpenToken
     def password=(password)
       @@password = password
     end
+    @@notBeforeTolerance = 120
+    def notBeforeTolerance=(notBeforeTolerance)
+      @@notBeforeTolerance = notBeforeTolerance
+    end
+    @@tokenLifetime = 300
+    def tokenLifetime=(tokenLifetime)
+      @@tokenLifetime = tokenLifetime
+    end
+    @@renewUntilLifetime = 43200
+    def renewUntilLifetime=(renewUntilLifetime)
+      @@renewUntilLifetime = renewUntilLifetime
+    end
+    
+    def writeToken(attributes, cipherSuite)
+      attributes.delete('not-before')
+      attributes.delete('not-on-or-after')
+      attributes.delete('renew-until')
+      attributes.store('not-before', Time.now.iso8601.to_s)
+      attributes.store('not-on-or-after', Time.at(Time.now.to_i + @@tokenLifetime).iso8601.to_s)
+      attributes.store('renew-until', Time.at(Time.now.to_i + @@renewUntilLifetime).iso8601.to_s)
+      tokenString = ""
+      key = OpenToken::PasswordKeyGenerator::generate(@@password, CIPHERS[cipherSuite])
+      c = OpenSSL::Cipher::Cipher::new(CIPHERS[cipherSuite][:algorithm])
+
+      c.encrypt()
+      c.key = key
+      c.iv = iv = c.random_iv
+      serialized = OpenToken::KeyValueSerializer::serialize(attributes)
+      compressed = zip_payload serialized
+      ivlen = CIPHERS[cipherSuite][:iv_length]
+      if ((compressed.length % ivlen) == 0)
+        padlen = ivlen
+      else
+        padlen = ivlen - (compressed.length % ivlen)
+      end
+      compressed += padlen.chr * padlen
+      encrypted = c.update(compressed)
+      mac = []
+      mac << "0x01".hex.chr # OTK version
+      mac << cipherSuite.chr
+      mac << iv
+      mac << serialized
+      hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac.join)
+      tokenString = "OTK" + 1.chr + cipherSuite.chr
+      tokenString += hash
+      tokenString += ivlen.chr
+      tokenString += iv
+      tokenString += 0.chr # key info length
+      tokenString += ((encrypted.length >> 8) &0xFF ).chr
+      tokenString += (encrypted.length & 0xFF).chr
+      tokenString += encrypted
+      inspect_binary_string "Unencoded", tokenString
+      encoded = encode tokenString
+      inspect_binary_string "Encoded", encoded
+      encoded
+    end
     def parse(opentoken = nil)
       verify opentoken.present?, 'Unable to parse empty token'
       data = decode(opentoken)
@@ -76,7 +133,7 @@ module OpenToken
       #key (not currently used)
       key_length = char_value_of data[iv_end + 1]
       key_end = iv_end + 1
-      verify key_length == 0, "Token key embedding is not currently supported"
+      verify key_length == 0, "Token key embedding is not currently supported. Key length is: #{key_length}"
 
       #payload
       payload_length = data[(key_end + 1)..(key_end + 2)].unpack('n').first
@@ -135,6 +192,11 @@ module OpenToken
       string = token.gsub('*', '=').gsub('_', '/').gsub('-', '+')
       data = Base64.decode64(string)
     end
+    def encode(token)
+      string = Base64.encode64(token);
+      string = string.gsub('=', '*').gsub('/', '_').gsub('+', '-').gsub('\n', '')
+      string
+    end
     def verify(assertion, message = 'Invalid Token')
       raise OpenToken::TokenInvalidError.new(message) unless assertion
     end
@@ -157,6 +219,10 @@ module OpenToken
       rescue Zlib::BufError
         Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate(compressed_payload[2, compressed_payload.size])
       end
+    end
+    def zip_payload(uncompressed)
+      compressed = Zlib::Deflate.deflate(uncompressed, 9)
+      compressed
     end
     def inspect_binary_string(header, string)
       return unless debug?

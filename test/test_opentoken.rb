@@ -67,4 +67,20 @@ class TestOpentoken < Test::Unit::TestCase
       end
     end
   end
+
+  context "write token" do
+    setup do
+      OpenToken.password = "Password1"
+    end
+    context "with aes-128-cbc and subject attribute" do
+      setup do
+          @attributesIn = { "subject" => "john", "email" => "john@example.com"}
+          @token = OpenToken.writeToken @attributesIn, 2
+      end
+      should "be readable" do
+        @attributesOut = OpenToken.parse @token
+        assert_equal @attributesIn, @attributesOut
+      end
+    end
+  end
 end
