@@ -60,7 +60,7 @@ module OpenToken
       c.encrypt
       c.key = key
       c.iv = iv = c.random_iv
-      serialized = OpenToken::KeyValueSerializer::serialize(attributes)
+      serialized = OpenToken::KeyValueSerializer.serialize(attributes)
       compressed = zip_payload serialized
       ivlen = cipher[:iv_length]
       if ((compressed.length % ivlen) == 0)
