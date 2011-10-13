@@ -75,7 +75,7 @@ class TestOpentoken < Test::Unit::TestCase
     context "with aes-128-cbc and subject attribute" do
       setup do
           @attributesIn = { "subject" => "john", "email" => "john@example.com"}
-          @token = OpenToken.encode @attributesIn, 2
+          @token = OpenToken.encode @attributesIn, OpenToken::CIPHER_AES_128_CBC
       end
       should "be decodable" do
         @attributesOut = OpenToken.decode @token

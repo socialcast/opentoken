@@ -39,39 +39,24 @@ module OpenToken
   }
 
   class << self
-    @@debug = nil
-    def debug=(flag)
-      @@debug = flag
-    end
+    attr_accessor :debug
     def debug?
-      @@debug
+      !!debug
     end
-    @@password = nil
-    def password=(password)
-      @@password = password
-    end
-    @@notBeforeTolerance = 120
-    def notBeforeTolerance=(notBeforeTolerance)
-      @@notBeforeTolerance = notBeforeTolerance
-    end
-    @@tokenLifetime = 300
-    def tokenLifetime=(tokenLifetime)
-      @@tokenLifetime = tokenLifetime
-    end
-    @@renewUntilLifetime = 43200
-    def renewUntilLifetime=(renewUntilLifetime)
-      @@renewUntilLifetime = renewUntilLifetime
-    end
-    
+
+    attr_accessor :password
+    attr_accessor :token_lifetime
+    attr_accessor :renew_until_lifetime
+
     def encode(attributes, cipherSuite)
       attributes.delete('not-before')
       attributes.delete('not-on-or-after')
       attributes.delete('renew-until')
       attributes.store('not-before', Time.now.utc.iso8601.to_s)
-      attributes.store('not-on-or-after', Time.at(Time.now.to_i + @@tokenLifetime).utc.iso8601.to_s)
-      attributes.store('renew-until', Time.at(Time.now.to_i + @@renewUntilLifetime).utc.iso8601.to_s)
+      attributes.store('not-on-or-after', Time.at(Time.now.to_i + token_lifetime).utc.iso8601.to_s)
+      attributes.store('renew-until', Time.at(Time.now.to_i + renew_until_lifetime).utc.iso8601.to_s)
       tokenString = ""
-      key = OpenToken::PasswordKeyGenerator::generate(@@password, CIPHERS[cipherSuite])
+      key = OpenToken::PasswordKeyGenerator::generate(password, CIPHERS[cipherSuite])
       c = OpenSSL::Cipher::Cipher::new(CIPHERS[cipherSuite][:algorithm])
 
       c.encrypt()
@@ -142,7 +127,7 @@ module OpenToken
       verify encrypted_payload.length == payload_length, "Payload length is #{encrypted_payload.length} and was expected to be #{payload_length}"
       inspect_binary_string "ENCRYPTED PAYLOAD [#{payload_offset}..#{data.length - 1}]", encrypted_payload
 
-      key = OpenToken::PasswordKeyGenerator.generate(@@password, cipher)
+      key = OpenToken::PasswordKeyGenerator.generate(password, cipher)
       inspect_binary_string 'KEY', key
 
       compressed_payload = decrypt_payload(encrypted_payload, cipher, key, iv)
@@ -235,3 +220,7 @@ module OpenToken
     end
   end
 end
+
+# intialize defaults
+OpenToken.token_lifetime = 300
+OpenToken.renew_until_lifetime = 43200
