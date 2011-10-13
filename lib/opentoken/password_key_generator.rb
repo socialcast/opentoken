@@ -21,7 +21,11 @@ module OpenToken
         cur = OpenSSL::HMAC.digest(SHA1_DIGEST, password, cur)
       
         20.times do |i|
-          result[i] = result[i] ^ cur[i]
+          if RUBY_VERSION < "1.9"
+            result[i] = result[i] ^ cur[i]
+          else
+            result[i] = (result[i].chr.ord ^ cur[i].chr.ord).chr
+          end
         end
       end
 
