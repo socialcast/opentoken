@@ -8,19 +8,20 @@ Gem::Specification.new do |s|
   s.version = "1.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Ryan Sonnek"]
-  s.date = %q{2011-01-18}
+  s.authors = [%q{Ryan Sonnek}]
+  s.date = %q{2011-10-13}
   s.description = %q{parse opentoken properties passed for Single Signon requests}
   s.email = %q{ryan@codecrate.com}
   s.extra_rdoc_files = [
-    "LICENSE",
-    "README.rdoc"
+    "LICENSE.txt",
+    "README.md"
   ]
   s.files = [
     ".document",
+    "CONTRIBUTORS.txt",
     "Gemfile",
-    "LICENSE",
-    "README.rdoc",
+    "LICENSE.txt",
+    "README.md",
     "Rakefile",
     "VERSION",
     "lib/opentoken.rb",
@@ -32,9 +33,9 @@ Gem::Specification.new do |s|
     "test/test_opentoken.rb"
   ]
   s.homepage = %q{http://github.com/wireframe/opentoken}
-  s.licenses = ["MIT"]
-  s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.4.2}
+  s.licenses = [%q{MIT}]
+  s.require_paths = [%q{lib}]
+  s.rubygems_version = %q{1.8.5}
   s.summary = %q{ruby implementation of the opentoken specification}
   s.test_files = [
     "test/helper.rb",
