@@ -48,23 +48,21 @@ module OpenToken
     attr_accessor :token_lifetime
     attr_accessor :renew_until_lifetime
 
-    def encode(attributes, cipherSuite)
-      attributes.delete('not-before')
-      attributes.delete('not-on-or-after')
-      attributes.delete('renew-until')
-      attributes.store('not-before', Time.now.utc.iso8601.to_s)
-      attributes.store('not-on-or-after', Time.at(Time.now.to_i + token_lifetime).utc.iso8601.to_s)
-      attributes.store('renew-until', Time.at(Time.now.to_i + renew_until_lifetime).utc.iso8601.to_s)
-      tokenString = ""
-      key = OpenToken::PasswordKeyGenerator::generate(password, CIPHERS[cipherSuite])
-      c = OpenSSL::Cipher::Cipher::new(CIPHERS[cipherSuite][:algorithm])
+    def encode(attributes, cipher_suite)
+      attributes['not-before'] = Time.now.utc.iso8601.to_s
+      attributes['not-on-or-after'] = Time.at(Time.now.to_i + token_lifetime).utc.iso8601.to_s
+      attributes['renew-until'] = Time.at(Time.now.to_i + renew_until_lifetime).utc.iso8601.to_s
 
-      c.encrypt()
+      cipher = CIPHERS[cipher_suite]
+      verify !cipher.nil?, "Unknown cipher suite: #{cipher_suite}"
+      key = OpenToken::PasswordKeyGenerator::generate(password, cipher)
+      c = OpenSSL::Cipher::Cipher::new(cipher[:algorithm])
+      c.encrypt
       c.key = key
       c.iv = iv = c.random_iv
       serialized = OpenToken::KeyValueSerializer::serialize(attributes)
       compressed = zip_payload serialized
-      ivlen = CIPHERS[cipherSuite][:iv_length]
+      ivlen = cipher[:iv_length]
       if ((compressed.length % ivlen) == 0)
         padlen = ivlen
       else
@@ -74,26 +72,28 @@ module OpenToken
       encrypted = c.update(compressed)
       mac = []
       mac << "0x01".hex.chr # OTK version
-      mac << cipherSuite.chr
+      mac << cipher_suite.chr
       mac << iv
       mac << serialized
       hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac.join)
-      tokenString = "OTK" + 1.chr + cipherSuite.chr
-      tokenString += hash
-      tokenString += ivlen.chr
-      tokenString += iv
-      tokenString += 0.chr # key info length
-      tokenString += ((encrypted.length >> 8) &0xFF ).chr
-      tokenString += (encrypted.length & 0xFF).chr
-      tokenString += encrypted
-      inspect_binary_string "Unencoded", tokenString
-      encoded = urlsafeBase64Encode tokenString
+
+      token_string = ""
+      token_string = "OTK" + 1.chr + cipher_suite.chr
+      token_string += hash
+      token_string += ivlen.chr
+      token_string += iv
+      token_string += 0.chr # key info length
+      token_string += ((encrypted.length >> 8) &0xFF ).chr
+      token_string += (encrypted.length & 0xFF).chr
+      token_string += encrypted
+      inspect_binary_string "Unencoded", token_string
+      encoded = urlsafe_encode64 token_string
       inspect_binary_string "Encoded", encoded
       encoded
     end
     def decode(opentoken = nil)
       verify opentoken.present?, 'Unable to parse empty token'
-      data = urlsafeBase64Decode(opentoken)
+      data = urlsafe_decode64(opentoken)
       inspect_binary_string 'DATA', data
 
       verify_header data
@@ -173,11 +173,11 @@ module OpenToken
       verify version == 1, "Unsupported token version: '#{version}'"
     end
     #ruby 1.9 has Base64.urlsafe_decode64 which can be used instead of gsubbing '_' and '-'
-    def urlsafeBase64Decode(token)
+    def urlsafe_decode64(token)
       string = token.gsub('*', '=').gsub('_', '/').gsub('-', '+')
       data = Base64.decode64(string)
     end
-    def urlsafeBase64Encode(token)
+    def urlsafe_encode64(token)
       string = Base64.encode64(token);
       string = string.gsub('=', '*').gsub('/', '_').gsub('+', '-').gsub(10.chr, '').gsub(11.chr, '')
       string
