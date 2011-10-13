@@ -15,7 +15,7 @@ attributes = OpenToken.decode 'opentoken-hashed-string'
 
 # encrypt opentoken from hash of attributes
 attributes = { 'subject' => 'foo', 'bar' => 'bak' }
-token = OpenToken.encode attributes, OpenToken::CIPHER_AES_128_CBC
+token = OpenToken.encode attributes, OpenToken::Cipher::AES_128_CBC
 ```
   
 ## Contributing

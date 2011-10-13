@@ -8,35 +8,10 @@ require 'time'
 require File.join(File.dirname(__FILE__), 'opentoken', 'token')
 require File.join(File.dirname(__FILE__), 'opentoken', 'key_value_serializer')
 require File.join(File.dirname(__FILE__), 'opentoken', 'password_key_generator')
+require File.join(File.dirname(__FILE__), 'opentoken', 'cipher')
 
 module OpenToken
   class TokenInvalidError < StandardError;  end
-
-  CIPHER_NULL = 0
-  CIPHER_AES_256_CBC = 1
-  CIPHER_AES_128_CBC = 2
-  CIPHER_3DES_168_CBC = 3
-
-  CIPHERS = {
-    CIPHER_NULL => {
-      :iv_length => 0
-    },
-    CIPHER_AES_256_CBC => {
-      :algorithm => 'aes-256-cbc',
-      :iv_length => 32,
-      :key_length => 256
-    },  
-    CIPHER_AES_128_CBC => {
-      :algorithm => 'aes-128-cbc',
-      :iv_length => 16,
-      :key_length => 128
-    },
-    CIPHER_3DES_168_CBC => {
-      :algorithm => 'des-cbc',
-      :iv_length => 8,
-      :key_length => 168
-    }
-  }
 
   class << self
     attr_accessor :debug
@@ -48,39 +23,29 @@ module OpenToken
     attr_accessor :token_lifetime
     attr_accessor :renew_until_lifetime
 
-    def encode(attributes, cipher_suite)
+    def encode(attributes, cipher)
       attributes['not-before'] = Time.now.utc.iso8601.to_s
       attributes['not-on-or-after'] = Time.at(Time.now.to_i + token_lifetime).utc.iso8601.to_s
       attributes['renew-until'] = Time.at(Time.now.to_i + renew_until_lifetime).utc.iso8601.to_s
 
-      cipher = CIPHERS[cipher_suite]
-      verify !cipher.nil?, "Unknown cipher suite: #{cipher_suite}"
-      key = OpenToken::PasswordKeyGenerator.generate(password, cipher)
-      c = OpenSSL::Cipher::Cipher::new(cipher[:algorithm])
-      c.encrypt
-      c.key = key
-      c.iv = iv = c.random_iv
       serialized = OpenToken::KeyValueSerializer.serialize(attributes)
       compressed = zip_payload serialized
-      ivlen = cipher[:iv_length]
-      if ((compressed.length % ivlen) == 0)
-        padlen = ivlen
-      else
-        padlen = ivlen - (compressed.length % ivlen)
-      end
-      compressed += padlen.chr * padlen
-      encrypted = c.update(compressed)
+
+      key = cipher.generate_key
+      iv = cipher.generate_iv
+      encrypted = cipher.encrypt_payload compressed, key, iv
+
       mac = []
       mac << "0x01".hex.chr # OTK version
-      mac << cipher_suite.chr
+      mac << cipher.suite.chr
       mac << iv
       mac << serialized
       hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac.join)
 
       token_string = ""
-      token_string = "OTK" + 1.chr + cipher_suite.chr
+      token_string = "OTK" + 1.chr + cipher.suite.chr
       token_string += hash
-      token_string += ivlen.chr
+      token_string += cipher.iv_length.chr
       token_string += iv
       token_string += 0.chr # key info length
       token_string += ((encrypted.length >> 8) &0xFF ).chr
@@ -101,8 +66,7 @@ module OpenToken
 
       #cipher suite identifier
       cipher_suite = char_value_of data[4]
-      cipher = CIPHERS[cipher_suite]
-      verify !cipher.nil?, "Unknown cipher suite: #{cipher_suite}"
+      cipher = OpenToken::Cipher.for_suite cipher_suite
 
       #SHA-1 HMAC
       payload_hmac = data[5..24]
@@ -113,7 +77,7 @@ module OpenToken
       iv_end = char_value_of [26, 26 + iv_length - 1].max
       iv = data[26..iv_end]
       inspect_binary_string "IV [26..#{iv_end}]", iv
-      verify iv_length == cipher[:iv_length], "Cipher expects iv length of #{cipher[:iv_length]} and was: #{iv_length}"
+      verify iv_length == cipher.iv_length, "Cipher expects iv length of #{cipher.iv_length} and was: #{iv_length}"
 
       #key (not currently used)
       key_length = char_value_of data[iv_end + 1]
@@ -127,10 +91,10 @@ module OpenToken
       verify encrypted_payload.length == payload_length, "Payload length is #{encrypted_payload.length} and was expected to be #{payload_length}"
       inspect_binary_string "ENCRYPTED PAYLOAD [#{payload_offset}..#{data.length - 1}]", encrypted_payload
 
-      key = OpenToken::PasswordKeyGenerator.generate(password, cipher)
+      key = cipher.generate_key
       inspect_binary_string 'KEY', key
 
-      compressed_payload = decrypt_payload(encrypted_payload, cipher, key, iv)
+      compressed_payload = cipher.decrypt_payload encrypted_payload, key, iv
       inspect_binary_string 'COMPRESSED PAYLOAD', compressed_payload
 
       unparsed_payload = unzip_payload compressed_payload
@@ -184,17 +148,6 @@ module OpenToken
     end
     def verify(assertion, message = 'Invalid Token')
       raise OpenToken::TokenInvalidError.new(message) unless assertion
-    end
-    #see http://snippets.dzone.com/posts/show/4975
-    #see http://jdwyah.blogspot.com/2009/12/decrypting-ruby-aes-encryption.html
-    #see http://snippets.dzone.com/posts/show/576
-    def decrypt_payload(encrypted_payload, cipher, key, iv)
-      return encrypted_payload unless cipher[:algorithm]
-      crypt = OpenSSL::Cipher::Cipher.new(cipher[:algorithm])
-      crypt.decrypt
-      crypt.key = key 
-      crypt.iv = iv
-      crypt.update(encrypted_payload) + crypt.final
     end
     #decompress the payload
     #see http://stackoverflow.com/questions/1361892/how-to-decompress-gzip-data-in-ruby

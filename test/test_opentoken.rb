@@ -1,6 +1,8 @@
 require 'helper'
 
 class TestOpentoken < Test::Unit::TestCase
+  # OpenToken.debug = true
+
   #"renew-until"=>"2010-03-05T07:19:15Z"
   #"not-before"=>"2010-03-04T19:19:15Z"
   #"not-on-or-after"=>"2010-03-04T19:24:15Z"
@@ -75,7 +77,7 @@ class TestOpentoken < Test::Unit::TestCase
     context "with aes-128-cbc and subject attribute" do
       setup do
           @attributesIn = { "subject" => "john", "email" => "john@example.com"}
-          @token = OpenToken.encode @attributesIn, OpenToken::CIPHER_AES_128_CBC
+          @token = OpenToken.encode @attributesIn, OpenToken::Cipher::AES_128_CBC
       end
       should "be decodable" do
         @attributesOut = OpenToken.decode @token

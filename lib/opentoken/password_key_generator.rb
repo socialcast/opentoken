@@ -3,9 +3,9 @@ module OpenToken
     SHA1_DIGEST = OpenSSL::Digest::Digest.new('sha1')
 
     class << self
-      def generate(password, cipher_suite)
+      def generate(password, cipher)
         salt = 0.chr * 8
-        generate_impl(password, cipher_suite, salt, 1000)
+        generate_impl(password, cipher, salt, 1000)
       end
 
       private
@@ -35,9 +35,9 @@ module OpenToken
       end
     
       def generate_impl(password, cipher, salt, iterations)
-        return unless cipher[:algorithm]
+        return unless cipher.algorithm
 
-        key_size = cipher[:key_length] / 8
+        key_size = cipher.key_length / 8
         numblocks = key_size / 20
         numblocks += 1 if (key_size % 20) > 0
       
