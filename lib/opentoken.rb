@@ -55,7 +55,7 @@ module OpenToken
 
       cipher = CIPHERS[cipher_suite]
       verify !cipher.nil?, "Unknown cipher suite: #{cipher_suite}"
-      key = OpenToken::PasswordKeyGenerator::generate(password, cipher)
+      key = OpenToken::PasswordKeyGenerator.generate(password, cipher)
       c = OpenSSL::Cipher::Cipher::new(cipher[:algorithm])
       c.encrypt
       c.key = key
