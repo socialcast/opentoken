@@ -10,11 +10,11 @@ class TestOpentoken < Test::Unit::TestCase
       @password = 'Test123'
       OpenToken.password = @password
     end
-    context "parsing token between expiration dates" do
+    context "decoding token between expiration dates" do
       setup do
         Timecop.travel(Time.iso8601('2010-03-04T19:20:10Z')) do
           assert_nothing_raised do
-            @token = OpenToken.parse @opentoken
+            @token = OpenToken.decode @opentoken
           end
         end
       end
@@ -29,31 +29,31 @@ class TestOpentoken < Test::Unit::TestCase
       end
     end
 
-    context "parsing token when current time is before expiration date" do
+    context "decoding token when current time is before expiration date" do
       should "raise TokenExpiredError" do
         Timecop.travel(Time.iso8601('2010-03-04T19:19:10Z')) do
           assert_raises OpenToken::TokenExpiredError do
-            @token = OpenToken.parse @opentoken
+            @token = OpenToken.decode @opentoken
           end
         end
       end
     end
 
-    context "parsing token when current time is equal to expiration date" do
+    context "decoding token when current time is equal to expiration date" do
       should "raise TokenExpiredError" do
         Timecop.travel(Time.iso8601('2010-03-04T19:24:15Z')) do
           assert_raises OpenToken::TokenExpiredError do
-            @token = OpenToken.parse @opentoken
+            @token = OpenToken.decode @opentoken
           end
         end
       end
     end
 
-    context "parsing token with attribute value containing apostrophe" do
+    context "decoding token with attribute value containing apostrophe" do
       setup do
         Timecop.travel(Time.iso8601('2011-01-13T11:08:01Z')) do
           @opentoken = "T1RLAQLIjiqgexqi1PQcEKCetvGoSYR2jhDFSIfE5ctlSBxEnq3S1ydjAADQUNRIKJx6_14aE3MQZnDABupGJrKNfoJHFS5VOnKexjMtboeOgst31Hf-D9CZBrpB7Jv0KBwnQ7DN3HizecPT76oX3UGtq_Vi5j5bKYCeObYm9W6h7NY-VzcZY5TTqIuulc2Jit381usAWZ2Sv1c_CWwhrH4hw-x7vUQMSjErvXK1qvsrFCpfNr7XlArx0HjI6kT5XEaHgQNdC0zrLw9cZ4rewoEisR3H5oM7B6gMaP82wTSFVBXvpn5r0KT-Iuc3JuG2en1zVh3GNf110oQCKQ**"
-          @token = OpenToken.parse @opentoken
+          @token = OpenToken.decode @opentoken
         end
       end
       should 'preserve apostrophe in attribute payload' do
@@ -63,22 +63,22 @@ class TestOpentoken < Test::Unit::TestCase
 
     should 'raise invalid token error parsing nil token' do
       assert_raises OpenToken::TokenInvalidError do
-        OpenToken.parse nil
+        OpenToken.decode nil
       end
     end
   end
 
-  context "write token" do
+  context "encoding token" do
     setup do
       OpenToken.password = "Password1"
     end
     context "with aes-128-cbc and subject attribute" do
       setup do
           @attributesIn = { "subject" => "john", "email" => "john@example.com"}
-          @token = OpenToken.writeToken @attributesIn, 2
+          @token = OpenToken.encode @attributesIn, 2
       end
-      should "be readable" do
-        @attributesOut = OpenToken.parse @token
+      should "be decodable" do
+        @attributesOut = OpenToken.decode @token
         assert_equal @attributesIn, @attributesOut
       end
     end

@@ -63,7 +63,7 @@ module OpenToken
       @@renewUntilLifetime = renewUntilLifetime
     end
     
-    def writeToken(attributes, cipherSuite)
+    def encode(attributes, cipherSuite)
       attributes.delete('not-before')
       attributes.delete('not-on-or-after')
       attributes.delete('renew-until')
@@ -102,13 +102,13 @@ module OpenToken
       tokenString += (encrypted.length & 0xFF).chr
       tokenString += encrypted
       inspect_binary_string "Unencoded", tokenString
-      encoded = encode tokenString
+      encoded = urlsafeBase64Encode tokenString
       inspect_binary_string "Encoded", encoded
       encoded
     end
-    def parse(opentoken = nil)
+    def decode(opentoken = nil)
       verify opentoken.present?, 'Unable to parse empty token'
-      data = decode(opentoken)
+      data = urlsafeBase64Decode(opentoken)
       inspect_binary_string 'DATA', data
 
       verify_header data
@@ -188,11 +188,11 @@ module OpenToken
       verify version == 1, "Unsupported token version: '#{version}'"
     end
     #ruby 1.9 has Base64.urlsafe_decode64 which can be used instead of gsubbing '_' and '-'
-    def decode(token)
+    def urlsafeBase64Decode(token)
       string = token.gsub('*', '=').gsub('_', '/').gsub('-', '+')
       data = Base64.decode64(string)
     end
-    def encode(token)
+    def urlsafeBase64Encode(token)
       string = Base64.encode64(token);
       string = string.gsub('=', '*').gsub('/', '_').gsub('+', '-').gsub(10.chr, '').gsub(11.chr, '')
       string
