@@ -39,7 +39,7 @@ module OpenToken
       mac << "0x01".hex.chr # OTK version
       mac << cipher.suite.chr
       mac << iv
-      mac << serialized
+      mac << force_encoding(serialized, 'BINARY')
       hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac.join)
 
       token_string = ""
@@ -114,7 +114,7 @@ module OpenToken
 
       unescaped_payload = CGI::unescapeHTML(unparsed_payload)
       puts 'UNESCAPED PAYLOAD', unescaped_payload if debug?
-      token = OpenToken::KeyValueSerializer.deserialize unescaped_payload
+      token = OpenToken::KeyValueSerializer.deserialize force_encoding(unescaped_payload, 'UTF-8')
       puts token.inspect if debug?
       token.validate!
       token
@@ -170,6 +170,9 @@ module OpenToken
         puts "#{index}: #{b} => #{b.chr}" 
         index += 1 
       end
+    end
+    def force_encoding(string, encoding)
+      string.respond_to?(:force_encoding) ? string.force_encoding(encoding) : string
     end
   end
 end

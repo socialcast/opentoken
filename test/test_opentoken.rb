@@ -85,4 +85,21 @@ class TestOpentoken < Test::Unit::TestCase
       end
     end
   end
+
+  context "encoding token with utf-8 values" do
+    setup do
+      OpenToken.password = "Password1"
+    end
+    context "with aes-128-cbc and subject attribute" do
+      setup do
+          @subject = OpenToken.send(:force_encoding, "Andr\xC3\xA9", 'UTF-8')
+          @attributesIn = { "subject" => @subject, "email" => "john@example.com"}
+          @token = OpenToken.encode @attributesIn, OpenToken::Cipher::AES_128_CBC
+      end
+      should "be decodable" do
+        @attributesOut = OpenToken.decode @token
+        assert_equal @attributesIn, @attributesOut
+      end
+    end
+  end
 end
