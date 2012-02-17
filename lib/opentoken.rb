@@ -9,6 +9,7 @@ require File.join(File.dirname(__FILE__), 'opentoken', 'token')
 require File.join(File.dirname(__FILE__), 'opentoken', 'key_value_serializer')
 require File.join(File.dirname(__FILE__), 'opentoken', 'password_key_generator')
 require File.join(File.dirname(__FILE__), 'opentoken', 'cipher')
+require File.join(File.dirname(__FILE__), 'opentoken', 'ext')
 
 module OpenToken
   class TokenInvalidError < StandardError;  end
@@ -29,6 +30,7 @@ module OpenToken
       attributes['renew-until'] = Time.at(Time.now.to_i + renew_until_lifetime).utc.iso8601.to_s
 
       serialized = OpenToken::KeyValueSerializer.serialize(attributes)
+      serialized.extend(OpenToken::Ext::String)
       compressed = zip_payload serialized
 
       key = cipher.generate_key
@@ -39,7 +41,7 @@ module OpenToken
       mac << "0x01".hex.chr # OTK version
       mac << cipher.suite.chr
       mac << iv
-      mac << serialized
+      mac << serialized.force_encoding('BINARY')
       hash = OpenSSL::HMAC.digest(OpenToken::PasswordKeyGenerator::SHA1_DIGEST, key, mac.join)
 
       token_string = ""
@@ -113,8 +115,9 @@ module OpenToken
       end
 
       unescaped_payload = CGI::unescapeHTML(unparsed_payload)
+      unescaped_payload.extend(OpenToken::Ext::String)
       puts 'UNESCAPED PAYLOAD', unescaped_payload if debug?
-      token = OpenToken::KeyValueSerializer.deserialize unescaped_payload
+      token = OpenToken::KeyValueSerializer.deserialize unescaped_payload.force_encoding('UTF-8')
       puts token.inspect if debug?
       token.validate!
       token
