@@ -92,7 +92,7 @@ class TestOpentoken < Test::Unit::TestCase
     end
     context "with aes-128-cbc and subject attribute" do
       setup do
-          @subject = "Andr\xC3\xA9".send(:extend, OpenToken::Ext::String).force_encoding('UTF-8')
+          @subject = OpenToken.send(:force_encoding, "Andr\xC3\xA9", 'UTF-8')
           @attributesIn = { "subject" => @subject, "email" => "john@example.com"}
           @token = OpenToken.encode @attributesIn, OpenToken::Cipher::AES_128_CBC
       end
