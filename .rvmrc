@@ -1,4 +1,4 @@
-rvm use 1.9.3-p0@opentoken --create
+rvm use 1.9.3-p125@opentoken --create
 if ! command -v bundle ; then
   gem install bundler
   bundle install --local
