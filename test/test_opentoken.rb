@@ -31,9 +31,9 @@ class TestOpentoken < Test::Unit::TestCase
       end
     end
 
-    context "decoding token when current time is before expiration date" do
+    context "decoding token when current time is outside clock skew tolerance of before expiration date" do
       should "raise TokenExpiredError" do
-        Timecop.travel(Time.iso8601('2010-03-04T19:19:10Z')) do
+        Timecop.travel(Time.iso8601('2010-03-04T19:19:05Z')) do
           assert_raises OpenToken::TokenExpiredError do
             @token = OpenToken.decode @opentoken
           end
@@ -41,9 +41,39 @@ class TestOpentoken < Test::Unit::TestCase
       end
     end
 
+    context "decoding token when current time is within clock skew tolerance of before expiration date" do
+      should "not raise TokenExpiredError" do
+        Timecop.travel(Time.iso8601('2010-03-04T19:19:10Z')) do
+          assert_nothing_raised do
+            @token = OpenToken.decode @opentoken
+          end
+        end
+      end
+    end
+
     context "decoding token when current time is equal to expiration date" do
-      should "raise TokenExpiredError" do
+      should "not raise TokenExpiredError" do
         Timecop.travel(Time.iso8601('2010-03-04T19:24:15Z')) do
+          assert_nothing_raised do
+            @token = OpenToken.decode @opentoken
+          end
+        end
+      end
+    end
+
+    context "decoding token when current time is within clock skew tolerance of expiration date" do
+      should "not raise TokenExpiredError" do
+        Timecop.travel(Time.iso8601('2010-03-04T19:24:19Z')) do
+          assert_nothing_raised do
+            @token = OpenToken.decode @opentoken
+          end
+        end
+      end
+    end
+
+    context "decoding token when current time is outside clock skew tolerance of expiration date" do
+      should "raise TokenExpiredError" do
+        Timecop.travel(Time.iso8601('2010-03-04T19:24:25Z')) do
           assert_raises OpenToken::TokenExpiredError do
             @token = OpenToken.decode @opentoken
           end
