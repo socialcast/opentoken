@@ -1,3 +1,4 @@
+[![Build Status](https://secure.travis-ci.org/socialcast/opentoken.png?branch=master)](http://travis-ci.org/socialcast/opentoken)
 # opentoken
 
 Parse encrypted opentoken properties
@@ -17,9 +18,9 @@ attributes = OpenToken.decode 'opentoken-hashed-string'
 attributes = { 'subject' => 'foo', 'bar' => 'bak' }
 token = OpenToken.encode attributes, OpenToken::Cipher::AES_128_CBC
 ```
-  
+
 ## Contributing
- 
+
 * Fork the project
 * Fix the issue
 * Add tests
