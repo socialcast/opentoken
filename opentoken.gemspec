@@ -6,9 +6,9 @@ Gem::Specification.new do |s|
   s.name        = "opentoken"
   s.version     = OpenToken::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Ryan Sonnek"]
-  s.email       = ["ryan@socialcast.com"]
-  s.homepage    = "http://github.com/socialcast/opentoken"
+  s.authors     = ["Socialcast Developers", "Ryan Sonnek"]
+  s.email       = ["developers@socialcast.com"]
+  s.homepage    = "https://github.com/socialcast/opentoken"
   s.summary     = %q{ruby implementation of the opentoken specification}
   s.description = %q{parse opentoken properties passed for Single Signon requests}
 
@@ -16,9 +16,9 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency(%q<activesupport>, [">= 3.0.3"])
   s.add_runtime_dependency(%q<i18n>, [">= 0"])
-  s.add_development_dependency(%q<shoulda>, ["2.11.3"])
-  s.add_development_dependency(%q<timecop>, ["0.3.5"])
-  s.add_development_dependency(%q<rake>, ["0.9.2"])
+  s.add_development_dependency 'rspec', '>= 2.11'
+  s.add_development_dependency 'timecop', '>= 0.7'
+  s.add_development_dependency 'rake', '>= 0.9.2.2'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
