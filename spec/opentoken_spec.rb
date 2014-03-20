@@ -32,17 +32,17 @@ describe OpenToken do
           token.valid_until.should == Time.iso8601('2010-03-05T07:19:15Z')
         end
       end
-      context "when current time is before expiration date" do
+      context "when current time is outside clock skew tolerance before expiration date" do
         it do
-          Timecop.freeze(Time.iso8601('2010-03-04T19:19:10Z')) do
+          Timecop.freeze(Time.iso8601('2010-03-04T19:19:05Z')) do
             expect { OpenToken.decode opentoken }.to raise_error OpenToken::TokenExpiredError
           end
         end
       end
-      context "when current time is equal to the expiration date" do
+      context "when current time is within clock skew tolerance before expiration date" do
         it do
-          Timecop.freeze(Time.iso8601('2010-03-04T19:24:15Z')) do
-            expect { OpenToken.decode opentoken }.to raise_error OpenToken::TokenExpiredError
+          Timecop.freeze(Time.iso8601('2010-03-04T19:19:11Z')) do
+            expect { OpenToken.decode opentoken }.to_not raise_error
           end
         end
       end

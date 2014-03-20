@@ -3,6 +3,8 @@ require 'active_support/hash_with_indifferent_access'
 require 'active_support/core_ext/time/calculations'
 
 module OpenToken
+  CLOCK_SKEW_TOLERANCE = 5 # in seconds
+
   class TokenExpiredError < StandardError;  end
 
   class Token < ActiveSupport::HashWithIndifferentAccess
@@ -11,7 +13,7 @@ module OpenToken
     end
     #verify that the current time is between the not-before and not-on-or-after values
     def valid?
-      start_at.past? && end_at.future?
+      (start_at - CLOCK_SKEW_TOLERANCE).past? && (end_at + CLOCK_SKEW_TOLERANCE).future?
     end
     def expired?
       !valid?
