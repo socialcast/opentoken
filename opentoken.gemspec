@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.homepage    = "https://github.com/socialcast/opentoken"
   s.summary     = %q{ruby implementation of the opentoken specification}
   s.description = %q{parse opentoken properties passed for Single Signon requests}
-
+  s.license     = "MIT"
   s.rubyforge_project = "opentoken"
 
   s.add_runtime_dependency(%q<activesupport>, [">= 3.0.3"])
